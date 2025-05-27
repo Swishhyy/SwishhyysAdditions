@@ -13,10 +13,12 @@ public final class SwishhyysAdditions extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CrystalListener(this), this);
         // Register /gcrystal command executor
         this.getCommand("gcrystal").setExecutor(new GCrystalCommand(this));
+        getLogger().info("SwishhyysAdditions enabled");
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        getLogger().info("SwishhyysAdditions disabled");
     }
 }
