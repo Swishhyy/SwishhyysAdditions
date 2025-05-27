@@ -1,0 +1,5 @@
+name: SwishhyysAdditions
+version: '0.0.1'
+main: me.swishhyy.swishhyysAdditions.SwishhyysAdditions
+api-version: '1.21'
+authors: [ Swishhyy ]
