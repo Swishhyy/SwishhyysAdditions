@@ -3,6 +3,8 @@ version: '0.0.1'
 main: me.swishhyy.swishhyysAdditions.SwishhyysAdditions
 api-version: '1.21.4'
 authors: [ Swishhyy ]
+softdepend:
+  - HeadDatabase
 
 commands:
   gcrystal:

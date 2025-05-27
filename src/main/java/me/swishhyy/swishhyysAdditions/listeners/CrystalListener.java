@@ -5,7 +5,6 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
@@ -20,6 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Sound;
+import me.arcaniax.hdb.api.HeadDatabaseAPI;
 
 import java.util.logging.Logger;
 
@@ -67,7 +67,17 @@ public class CrystalListener implements Listener {
                         as.setInvisible(true);
                         as.setMarker(true);
                         as.setGravity(false);
-                        as.getEquipment().setHelmet(new ItemStack(Material.PLAYER_HEAD));
+                        try {
+                            HeadDatabaseAPI hdb = new HeadDatabaseAPI();
+                            // The ID should be the head ID from HeadDatabase (e.g., "7129")
+                            // NOT the texture hash
+                            ItemStack head = hdb.getItemHead("7129");
+                            as.getEquipment().setHelmet(head);
+                        } catch (NullPointerException ex) {
+                            if (debug) logger.warning("Failed to get head from HeadDatabase: " + ex.getMessage());
+                            // Fallback to a regular player head if HeadDatabase fails
+                            as.getEquipment().setHelmet(new ItemStack(org.bukkit.Material.PLAYER_HEAD));
+                        }
                     });
                     if (debug) logger.info("onCrystalUse: spawned ArmorStand at " + spawnLoc);
                     // spawn hologram above the crystal for countdown
