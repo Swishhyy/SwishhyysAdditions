@@ -3,6 +3,7 @@ package me.swishhyy.swishhyysAdditions.listeners;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -74,11 +75,12 @@ public class CrystalListener implements Listener {
                         as2.setInvisible(true);
                         as2.setMarker(true);
                         as2.setGravity(false);
-                        as2.customName(Component.text("2:00"));
+                        as2.customName(Component.text("2:00", TextColor.color(0x9966CC)));
                         as2.setCustomNameVisible(true);
                     });
-                    // update countdown every second
+                    // total lifetime in ticks
                     long lifeTicks = 120L * 20L;
+                    // update countdown every second
                     new BukkitRunnable() {
                         int remaining = 120;
                         @Override
@@ -86,7 +88,7 @@ public class CrystalListener implements Listener {
                             if (holo.isDead() || stand.isDead()) { this.cancel(); return; }
                             if (remaining <= 0) { holo.remove(); this.cancel(); return; }
                             int mins = remaining / 60, secs = remaining % 60;
-                            holo.customName(Component.text(String.format("%d:%02d", mins, secs)));
+                            holo.customName(Component.text(String.format("%d:%02d", mins, secs), TextColor.color(0x9966CC)));
                             // holo remains fixed above crystal, no teleport needed
                             remaining--;
                         }
