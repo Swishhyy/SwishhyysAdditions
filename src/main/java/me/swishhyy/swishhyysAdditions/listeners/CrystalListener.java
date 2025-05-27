@@ -18,38 +18,41 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.Sound;
 
 import java.util.logging.Logger;
 
 public class CrystalListener implements Listener {
     private final JavaPlugin plugin;
     private final Logger logger;
+    private final boolean debug;
 
     public CrystalListener(JavaPlugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
+        this.debug = plugin.getConfig().getBoolean("debug", false);
     }
 
     @EventHandler
     public void onCrystalUse(PlayerInteractEvent e) {
-        logger.info("onCrystalUse: action " + e.getAction() + " by player " + e.getPlayer().getName());
+        if (debug) logger.info("onCrystalUse: action " + e.getAction() + " by player " + e.getPlayer().getName());
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         ItemStack item = e.getItem();
         if (item == null) {
-            logger.info("onCrystalUse: no item in hand");
+            if (debug) logger.info("onCrystalUse: no item in hand");
             return;
         }
         var meta = item.getItemMeta();
         if (meta != null) {
             Component displayNameComp = meta.displayName();
             if (displayNameComp == null) {
-                logger.info("onCrystalUse: item has no displayName");
+                if (debug) logger.info("onCrystalUse: item has no displayName");
             } else {
                 String rawName = LegacyComponentSerializer.legacySection().serialize(displayNameComp);
                 String name = PlainTextComponentSerializer.plainText().serialize(displayNameComp);
-                logger.info("onCrystalUse: rawDisplayName=" + rawName + ", strippedName=" + name);
+                if (debug) logger.info("onCrystalUse: rawDisplayName=" + rawName + ", strippedName=" + name);
                 if ("Growing Crystal".equalsIgnoreCase(name)) {
-                    logger.info("onCrystalUse: matched Growing Crystal");
+                    if (debug) logger.info("onCrystalUse: matched Growing Crystal");
                     e.setCancelled(true);
                     Block clicked = e.getClickedBlock();
                     if (clicked == null) return;
@@ -57,7 +60,7 @@ public class CrystalListener implements Listener {
                     Location spawnLoc = clicked.getLocation().add(0.5, 1.2, 0.5);
                     // consume one crystal
                     item.setAmount(item.getAmount() - 1);
-                    logger.info("onCrystalUse: consumed one crystal, remaining=" + item.getAmount());
+                    if (debug) logger.info("onCrystalUse: consumed one crystal, remaining=" + item.getAmount());
                     // spawn floating crystal
                     ArmorStand stand = world.spawn(spawnLoc, ArmorStand.class, as -> {
                         as.setInvisible(true);
@@ -65,19 +68,64 @@ public class CrystalListener implements Listener {
                         as.setGravity(false);
                         as.getEquipment().setHelmet(new ItemStack(Material.PLAYER_HEAD));
                     });
-                    logger.info("onCrystalUse: spawned ArmorStand at " + spawnLoc);
-                    // schedule growth every 10 seconds, for 240 seconds total
+                    if (debug) logger.info("onCrystalUse: spawned ArmorStand at " + spawnLoc);
+                    // spawn hologram above the crystal for countdown
+                    ArmorStand holo = world.spawn(spawnLoc.clone().add(0, 2.5, 0), ArmorStand.class, as2 -> {
+                        as2.setInvisible(true);
+                        as2.setMarker(true);
+                        as2.setGravity(false);
+                        as2.customName(Component.text("2:00"));
+                        as2.setCustomNameVisible(true);
+                    });
+                    // update countdown every second
+                    long lifeTicks = 120L * 20L;
+                    new BukkitRunnable() {
+                        int remaining = 120;
+                        @Override
+                        public void run() {
+                            if (holo.isDead() || stand.isDead()) { this.cancel(); return; }
+                            if (remaining <= 0) { holo.remove(); this.cancel(); return; }
+                            int mins = remaining / 60, secs = remaining % 60;
+                            holo.customName(Component.text(String.format("%d:%02d", mins, secs)));
+                            // holo remains fixed above crystal, no teleport needed
+                            remaining--;
+                        }
+                    }.runTaskTimer(plugin, 0L, 20L);
+                    // remove hologram when crystal expires
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (!holo.isDead()) holo.remove();
+                        }
+                    }.runTaskLater(plugin, lifeTicks);
+                    // animate spin and bob
+                    Location baseLoc = stand.getLocation().clone();
+                    new BukkitRunnable() {
+                        int tick = 0;
+                        @Override
+                        public void run() {
+                            if (stand.isDead()) {
+                                this.cancel();
+                                return;
+                            }
+                            tick++;
+                            double bob = Math.sin(tick * 0.1) * 0.15;
+                            Location newLoc = baseLoc.clone().add(0, bob, 0);
+                            stand.teleport(newLoc);
+                            float yaw = (tick * 5f) % 360f;
+                            stand.setRotation(yaw, 0f);
+                        }
+                    }.runTaskTimer(plugin, 0L, 1L);
+                    // schedule growth every 10 seconds until removal
                     BukkitRunnable task = new BukkitRunnable() {
                         int ticks = 0;
                         @Override
                         public void run() {
-                            logger.info("Growth cycle at ticks=" + ticks + " at " + stand.getLocation());
-                            if (ticks >= 240) {
-                                stand.remove();
+                            if (stand.isDead()) {
                                 this.cancel();
-                                logger.info("Crystal expired at " + stand.getLocation());
                                 return;
                             }
+                            // growth cycle
                             Location center = stand.getLocation();
                             for (int dx = -2; dx <= 2; dx++) {
                                 for (int dz = -2; dz <= 2; dz++) {
@@ -98,12 +146,39 @@ public class CrystalListener implements Listener {
                                     }
                                 }
                             }
+                            // play growth sound every cycle
+                            world.playSound(center, Sound.BLOCK_CHORUS_FLOWER_GROW, 1.0F, 1.0F);
                             ticks += 10;
                         }
                     };
-                    logger.info("onCrystalUse: scheduling growth task");
+                    if (debug) logger.info("Growth task scheduled with interval=200 ticks");
                     task.runTaskTimer(this.plugin, 200L, 200L);
-                    logger.info("Growth task scheduled with interval=200 ticks");
+                    // schedule warning effect 15 ticks before crystal expires (120 seconds total = 2400 ticks)
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            Location warnLoc = stand.getLocation();
+                            World warnWorld = warnLoc.getWorld();
+                            if (warnWorld != null) {
+                                warnWorld.spawnParticle(Particle.EXPLOSION, warnLoc, 10, 0.5, 0.5, 0.5, 0.1);
+                                warnWorld.playSound(warnLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.0F, 1.0F);
+                            }
+                        }
+                    }.runTaskLater(this.plugin, lifeTicks - 15L);
+                    // schedule final removal with explosion at 120 seconds
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            Location expireLoc = stand.getLocation();
+                            World expireWorld = expireLoc.getWorld();
+                            if (expireWorld != null) {
+                                expireWorld.spawnParticle(Particle.EXPLOSION, expireLoc, 10, 0.5, 0.5, 0.5, 0.1);
+                                expireWorld.playSound(expireLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.0F, 1.0F);
+                            }
+                            stand.remove();
+                            if (debug) logger.info("Crystal expired at " + expireLoc);
+                        }
+                    }.runTaskLater(this.plugin, lifeTicks);
                 }
             }
         }
