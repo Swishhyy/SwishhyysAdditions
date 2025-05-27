@@ -1,5 +1,11 @@
 name: SwishhyysAdditions
 version: '0.0.1'
 main: me.swishhyy.swishhyysAdditions.SwishhyysAdditions
-api-version: '1.21'
+api-version: '1.21.4'
 authors: [ Swishhyy ]
+
+commands:
+  gcrystal:
+    description: Gives you a Growing Crystal
+    usage: /gcrystal
+
