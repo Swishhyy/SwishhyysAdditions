@@ -9,13 +9,16 @@ import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import java.util.List;
 
 public class GrowingCrystal {
+    // Use the same head ID as in CrystalListener for consistency
+    private static final String CRYSTAL_HEAD_ID = "74344";
+
     public static ItemStack create() {
         ItemStack crystal;
 
         try {
-            // Get the custom head from HeadDatabase
+            // Get the custom head from HeadDatabase using the same ID as CrystalListener
             HeadDatabaseAPI hdb = new HeadDatabaseAPI();
-            crystal = hdb.getItemHead("7129"); // Replace with your desired head ID
+            crystal = hdb.getItemHead(CRYSTAL_HEAD_ID);
 
             // Apply custom name and lore
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
