@@ -1,4 +1,4 @@
-package me.swishhyy.swishhyysAdditions.listeners;
+package me.swishhyy.swishhyysAdditions.listeners.CrystalListener;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -26,7 +26,7 @@ import org.bukkit.NamespacedKey;
 
 import java.util.logging.Logger;
 
-public class CrystalListener implements Listener {
+public class Tier1GCrystalListener implements Listener {
     private final JavaPlugin plugin;
     private final Logger logger;
     private final boolean debug;
@@ -34,7 +34,7 @@ public class CrystalListener implements Listener {
     private final int nameColor;
     private static final NamespacedKey CRYSTAL_KEY;
 
-    public CrystalListener(JavaPlugin plugin) {
+    public Tier1GCrystalListener(JavaPlugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.debug = plugin.getConfig().getBoolean("debug", false);

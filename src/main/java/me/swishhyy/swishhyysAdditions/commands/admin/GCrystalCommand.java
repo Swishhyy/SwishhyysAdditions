@@ -1,6 +1,6 @@
-package me.swishhyy.swishhyysAdditions.commands.user;
+package me.swishhyy.swishhyysAdditions.commands.admin;
 
-import me.swishhyy.swishhyysAdditions.items.GrowingCrystal;
+import me.swishhyy.swishhyysAdditions.items.GCrystal.Tier1GCrystal;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,7 +24,7 @@ public class GCrystalCommand implements CommandExecutor {
         logger.info("GCrystalCommand: executed by " + sender.getName() + ", label=" + label + ", args=" + String.join(",", args));
         if (sender instanceof Player player) {
             logger.info("GCrystalCommand: giving Growing Crystal to player " + player.getName());
-            player.getInventory().addItem(GrowingCrystal.create());
+            player.getInventory().addItem(Tier1GCrystal.create());
             player.sendMessage("§aYou have been given a Growing Crystal!");
         } else {
             logger.warning("GCrystalCommand: non-player sender " + sender.getName());

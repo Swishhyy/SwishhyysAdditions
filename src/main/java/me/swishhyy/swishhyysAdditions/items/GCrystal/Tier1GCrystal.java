@@ -1,4 +1,4 @@
-package me.swishhyy.swishhyysAdditions.items;
+package me.swishhyy.swishhyysAdditions.items.GCrystal;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -11,7 +11,7 @@ import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import me.swishhyy.swishhyysAdditions.SwishhyysAdditions;
 import java.util.List;
 
-public class GrowingCrystal {
+public class Tier1GCrystal {
     // Access the plugin instance to get the config
     private static final JavaPlugin plugin = SwishhyysAdditions.getPlugin(SwishhyysAdditions.class);
 
