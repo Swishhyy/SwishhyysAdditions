@@ -30,13 +30,18 @@ public class CrystalListener implements Listener {
     private final JavaPlugin plugin;
     private final Logger logger;
     private final boolean debug;
-    private static final String CRYSTAL_HEAD_ID = "74344";
+    private final String crystalHeadId;
+    private final int nameColor;
     private static final NamespacedKey CRYSTAL_KEY;
 
     public CrystalListener(JavaPlugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.debug = plugin.getConfig().getBoolean("debug", false);
+        // Read crystal head ID and name color from config
+        this.crystalHeadId = plugin.getConfig().getString("items.growing_crystal.head_id", "74344");
+        String colorHex = plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC");
+        this.nameColor = Integer.parseInt(colorHex, 16);
     }
 
     // Static initializer to create the NamespacedKey
@@ -48,13 +53,13 @@ public class CrystalListener implements Listener {
      * Creates a Growing Crystal item using HeadDatabase
      * @return ItemStack of the Growing Crystal with the correct skin
      */
-    public static ItemStack createGrowingCrystal() {
+    public ItemStack createGrowingCrystal() {
         try {
             HeadDatabaseAPI hdb = new HeadDatabaseAPI();
             // Using the exact same method for getting the head as in the placement code
-            ItemStack crystal = hdb.getItemHead(CRYSTAL_HEAD_ID);
+            ItemStack crystal = hdb.getItemHead(crystalHeadId);
             ItemMeta meta = crystal.getItemMeta();
-            meta.displayName(Component.text("Growing Crystal", TextColor.color(0x9966CC)));
+            meta.displayName(Component.text("Growing Crystal", TextColor.color(nameColor)));
 
             // Add persistent data tag to identify this as a Growing Crystal
             meta.getPersistentDataContainer().set(CRYSTAL_KEY, PersistentDataType.BYTE, (byte)1);
@@ -65,7 +70,7 @@ public class CrystalListener implements Listener {
             // Fallback to a regular player head
             ItemStack fallback = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
             ItemMeta meta = fallback.getItemMeta();
-            meta.displayName(Component.text("Growing Crystal", TextColor.color(0x9966CC)));
+            meta.displayName(Component.text("Growing Crystal", TextColor.color(nameColor)));
 
             // Add persistent data tag to identify this as a Growing Crystal
             meta.getPersistentDataContainer().set(CRYSTAL_KEY, PersistentDataType.BYTE, (byte)1);
@@ -137,7 +142,7 @@ public class CrystalListener implements Listener {
             try {
                 HeadDatabaseAPI hdb = new HeadDatabaseAPI();
                 // Use the constant for consistency
-                ItemStack head = hdb.getItemHead(CRYSTAL_HEAD_ID);
+                ItemStack head = hdb.getItemHead(crystalHeadId);
                 as.getEquipment().setHelmet(head);
             } catch (Exception ex) {
                 if (debug) logger.warning("Failed to get head from HeadDatabase: " + ex.getMessage());
@@ -153,7 +158,7 @@ public class CrystalListener implements Listener {
             as2.setInvisible(true);
             as2.setMarker(true);
             as2.setGravity(false);
-            as2.customName(Component.text("2:00", TextColor.color(0x9966CC)));
+            as2.customName(Component.text("2:00", TextColor.color(nameColor)));
             as2.setCustomNameVisible(true);
         });
 
@@ -168,7 +173,7 @@ public class CrystalListener implements Listener {
                 if (holo.isDead() || stand.isDead()) { this.cancel(); return; }
                 if (remaining <= 0) { holo.remove(); this.cancel(); return; }
                 int mins = remaining / 60, secs = remaining % 60;
-                holo.customName(Component.text(String.format("%d:%02d", mins, secs), TextColor.color(0x9966CC)));
+                holo.customName(Component.text(String.format("%d:%02d", mins, secs), TextColor.color(nameColor)));
                 // holo remains fixed above crystal, no teleport needed
                 remaining--;
             }

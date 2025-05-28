@@ -1,0 +1,12 @@
+# SwishhyysAdditions Configuration
+
+# Enable debug logging (default: false)
+debug: false
+
+# Custom items configuration
+items:
+  growing_crystal:
+    # Head Database ID for the Growing Crystal
+    head_id: "74344"
+    # Display name color in hex
+    name_color: "9966CC"

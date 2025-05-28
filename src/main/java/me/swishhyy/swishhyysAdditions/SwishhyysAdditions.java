@@ -11,6 +11,9 @@ public final class SwishhyysAdditions extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        // Save default config if it doesn't exist
+        saveDefaultConfig();
+
         // Register for HeadDatabase's load event
         getServer().getPluginManager().registerEvents(this, this);
 
