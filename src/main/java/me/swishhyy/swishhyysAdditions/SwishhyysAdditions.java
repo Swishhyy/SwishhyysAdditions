@@ -5,7 +5,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.swishhyy.swishhyysAdditions.listeners.CrystalListener.Tier1GCrystalListener;
-import me.swishhyy.swishhyysAdditions.commands.admin.GCrystalCommand;
+import me.swishhyy.swishhyysAdditions.commands.CommandLoader;
 
 public final class SwishhyysAdditions extends JavaPlugin implements Listener {
 
@@ -27,9 +27,13 @@ public final class SwishhyysAdditions extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onDatabaseLoad(DatabaseLoadEvent e) {
-        // HeadDatabase is now loaded, we can register our listeners
+        // HeadDatabase is now loaded, we can register our listeners and commands
         getServer().getPluginManager().registerEvents(new Tier1GCrystalListener(this), this);
-        this.getCommand("gcrystal").setExecutor(new GCrystalCommand(this));
+
+        // Initialize and register commands
+        CommandLoader commandLoader = new CommandLoader(this);
+        commandLoader.registerCommands();
+
         getLogger().info("HeadDatabase loaded - SwishhyysAdditions enabled");
     }
 

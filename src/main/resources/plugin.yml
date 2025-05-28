@@ -3,11 +3,18 @@ version: '0.0.1'
 main: me.swishhyy.swishhyysAdditions.SwishhyysAdditions
 api-version: '1.21.4'
 authors: [ Swishhyy ]
+description: Custom additions to enhance your Minecraft server
 softdepend:
   - HeadDatabase
 
 commands:
-  gcrystal:
-    description: Gives you a Growing Crystal
-    usage: /gcrystal
+  sa:
+    description: Main command for SwishhyysAdditions plugin
+    usage: /sa [reload|give]
+    permission: sa.admin
+    aliases: [swishhyysadditions]
 
+permissions:
+  sa.admin:
+    description: Allows access to all admin commands
+    default: op
