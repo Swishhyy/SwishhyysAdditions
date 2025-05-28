@@ -84,9 +84,23 @@ public class CommandLoader implements TabCompleter {
                 }
             } else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
                 // Second argument for "give" - player names or item names
-                completions.addAll(plugin.getServer().getOnlinePlayers().stream()
-                        .map(Player::getName)
-                        .toList());
+                if (sender instanceof Player) {
+                    // If command sender is a player, offer player names AND item names
+                    completions.addAll(plugin.getServer().getOnlinePlayers().stream()
+                            .map(Player::getName)
+                            .toList());
+
+                    // Add item names for tab completion
+                    completions.addAll(giveCommand.getItemNames());
+                } else {
+                    // If sender is console, only show player names (as console must specify a player)
+                    completions.addAll(plugin.getServer().getOnlinePlayers().stream()
+                            .map(Player::getName)
+                            .toList());
+                }
+            } else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
+                // Third argument for "give" (after player name) - item names
+                completions.addAll(giveCommand.getItemNames());
             }
         }
 

@@ -10,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class GiveCommand implements CommandExecutor {
     private final JavaPlugin plugin;
@@ -34,7 +37,7 @@ public class GiveCommand implements CommandExecutor {
             scanItemClasses();
         } catch (Exception e) {
             logger.severe("Error scanning item classes: " + e.getMessage());
-            e.printStackTrace();
+            logger.severe("Stack trace: " + getStackTraceAsString(e));
         }
     }
 
@@ -55,7 +58,11 @@ public class GiveCommand implements CommandExecutor {
             // Handle "/sa give" without arguments - show usage
             if (args.length == 1) {
                 sender.sendMessage(prefix + "§cUsage: /sa give [player] <item>");
-                sender.sendMessage(prefix + "§cAvailable items: " + String.join(", ", itemClasses.keySet()));
+                if (itemClasses.isEmpty()) {
+                    sender.sendMessage(prefix + "§cNo items available. Check the server logs for scanning errors.");
+                } else {
+                    sender.sendMessage(prefix + "§cAvailable items: " + String.join(", ", itemClasses.keySet()));
+                }
                 return true;
             }
 
@@ -88,7 +95,11 @@ public class GiveCommand implements CommandExecutor {
             // Check if the item exists
             if (!itemClasses.containsKey(itemName)) {
                 sender.sendMessage(prefix + "§cItem '" + itemName + "' not found.");
-                sender.sendMessage(prefix + "§cAvailable items: " + String.join(", ", itemClasses.keySet()));
+                if (itemClasses.isEmpty()) {
+                    sender.sendMessage(prefix + "§cNo items available. Check the server logs for scanning errors.");
+                } else {
+                    sender.sendMessage(prefix + "§cAvailable items: " + String.join(", ", itemClasses.keySet()));
+                }
                 return true;
             }
 
@@ -116,7 +127,7 @@ public class GiveCommand implements CommandExecutor {
             } catch (Exception e) {
                 sender.sendMessage(prefix + "§cError creating item: " + e.getMessage());
                 logger.severe("Error creating item " + itemName + ": " + e.getMessage());
-                e.printStackTrace();
+                logger.severe("Stack trace: " + getStackTraceAsString(e));
             }
 
             return true;
@@ -125,34 +136,84 @@ public class GiveCommand implements CommandExecutor {
     }
 
     /**
+     * Returns a list of available item names for tab completion
+     */
+    public List<String> getItemNames() {
+        return new ArrayList<>(itemClasses.keySet());
+    }
+
+    /**
      * Scans the items package to find all item classes with a static create() method
      */
     private void scanItemClasses() throws Exception {
-        String packageName = "me.swishhyy.swishhyysAdditions.items";
+        String basePackage = "me.swishhyy.swishhyysAdditions.items";
+
+        // Get the JAR file of the plugin
+        File jarFile = new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
+
+        // If running from a JAR file
+        if (jarFile.isFile()) {
+            scanJarForItemClasses(jarFile, basePackage);
+        } else {
+            // Running from an IDE or exploded directory
+            scanDirectoryForItemClasses(basePackage);
+        }
+
+        if (itemClasses.isEmpty()) {
+            logger.warning("No item classes found! Make sure your items have a static create() method that returns ItemStack");
+        } else {
+            logger.info("Found " + itemClasses.size() + " item classes: " + String.join(", ", itemClasses.keySet()));
+        }
+    }
+
+    /**
+     * Scans a JAR file for item classes
+     */
+    private void scanJarForItemClasses(File jarFile, String basePackage) throws IOException {
+        String basePackagePath = basePackage.replace('.', '/');
+
+        try (JarFile jar = new JarFile(jarFile)) {
+            Enumeration<JarEntry> entries = jar.entries();
+
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String entryName = entry.getName();
+
+                // Check if it's a class file in our package
+                if (entryName.endsWith(".class") && entryName.startsWith(basePackagePath)) {
+                    // Convert path to class name
+                    String className = entryName.substring(0, entryName.length() - 6).replace('/', '.');
+                    tryRegisterItemClass(className);
+                }
+            }
+        }
+    }
+
+    /**
+     * Scans directories for item classes (used when running from IDE)
+     */
+    private void scanDirectoryForItemClasses(String basePackage) throws Exception {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        String path = packageName.replace('.', '/');
+        String path = basePackage.replace('.', '/');
 
-        // Get all resources in the package
-        Enumeration<URL> resources = classLoader.getResources(path);
-        List<File> dirs = new ArrayList<>();
+        try {
+            // Get all resources in the package
+            Enumeration<URL> resources = classLoader.getResources(path);
 
-        while (resources.hasMoreElements()) {
-            URL resource = resources.nextElement();
-            dirs.add(new File(resource.getFile()));
+            while (resources.hasMoreElements()) {
+                URL resource = resources.nextElement();
+                File directory = new File(resource.getFile());
+                findItemClassesInDirectory(directory, basePackage);
+            }
+        } catch (IOException e) {
+            logger.warning("Error scanning directory for item classes: " + e.getMessage());
         }
-
-        // Go through all directories and find classes
-        for (File directory : dirs) {
-            findItemClasses(directory, packageName);
-        }
-
-        logger.info("Found " + itemClasses.size() + " item classes: " + String.join(", ", itemClasses.keySet()));
     }
 
     /**
      * Recursively finds all classes in a directory
      */
-    private void findItemClasses(File directory, String packageName) throws Exception {
+    private void findItemClassesInDirectory(File directory, String packageName) {
         if (!directory.exists()) {
             return;
         }
@@ -165,30 +226,56 @@ public class GiveCommand implements CommandExecutor {
         for (File file : files) {
             if (file.isDirectory()) {
                 // If the file is a directory, recurse into it
-                findItemClasses(file, packageName + "." + file.getName());
+                findItemClassesInDirectory(file, packageName + "." + file.getName());
             } else if (file.getName().endsWith(".class")) {
                 // If it's a class file, check if it has a create() method
                 String className = packageName + "." + file.getName().substring(0, file.getName().length() - 6);
-
-                try {
-                    Class<?> clazz = Class.forName(className);
-
-                    // Check if the class has a static create() method that returns ItemStack
-                    try {
-                        Method createMethod = clazz.getDeclaredMethod("create");
-                        if (ItemStack.class.isAssignableFrom(createMethod.getReturnType())) {
-                            // Get the simple name for the command (e.g., "tier1gcrystal" from "Tier1GCrystal")
-                            String itemName = clazz.getSimpleName().toLowerCase();
-                            itemClasses.put(itemName, clazz);
-                            logger.info("Found item class: " + clazz.getSimpleName());
-                        }
-                    } catch (NoSuchMethodException ignored) {
-                        // Skip classes without a create() method
-                    }
-                } catch (ClassNotFoundException ignored) {
-                    // Skip if class can't be loaded
-                }
+                tryRegisterItemClass(className);
             }
         }
+    }
+
+    /**
+     * Tries to register a class as an item if it has the required create() method
+     */
+    private void tryRegisterItemClass(String className) {
+        try {
+            Class<?> clazz = Class.forName(className);
+
+            // Skip abstract classes and interfaces
+            if (java.lang.reflect.Modifier.isAbstract(clazz.getModifiers()) ||
+                clazz.isInterface()) {
+                return;
+            }
+
+            // Check if the class has a static create() method that returns ItemStack
+            try {
+                Method createMethod = clazz.getDeclaredMethod("create");
+                if (java.lang.reflect.Modifier.isStatic(createMethod.getModifiers()) &&
+                    ItemStack.class.isAssignableFrom(createMethod.getReturnType())) {
+                    // Get the simple name for the command
+                    String itemName = clazz.getSimpleName().toLowerCase();
+                    itemClasses.put(itemName, clazz);
+                    logger.info("Registered item: " + itemName + " (" + className + ")");
+                }
+            } catch (NoSuchMethodException ignored) {
+                // Skip classes without a create() method
+            }
+        } catch (ClassNotFoundException | NoClassDefFoundError ignored) {
+            // Skip if class can't be loaded
+        } catch (Exception e) {
+            logger.warning("Error inspecting class " + className + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Converts a stack trace to a string
+     */
+    private String getStackTraceAsString(Exception e) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : e.getStackTrace()) {
+            sb.append(element.toString()).append("\n");
+        }
+        return sb.toString();
     }
 }
