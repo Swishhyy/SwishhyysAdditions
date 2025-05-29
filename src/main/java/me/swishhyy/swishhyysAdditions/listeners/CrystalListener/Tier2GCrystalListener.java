@@ -15,7 +15,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -26,59 +25,32 @@ import org.bukkit.NamespacedKey;
 
 import java.util.logging.Logger;
 
-public class Tier1GCrystalListener implements Listener {
+public class Tier2GCrystalListener implements Listener {
     private final JavaPlugin plugin;
     private final Logger logger;
     private final boolean debug;
     private final String crystalHeadId;
     private final int nameColor;
     private static final NamespacedKey CRYSTAL_KEY;
-    private static final int RANGE = 2;
 
-    public Tier1GCrystalListener(JavaPlugin plugin) {
+    // Tier 2 specific values
+    private static final int DURATION_SECONDS = 600; // 10 minutes
+    private static final int INTERVAL_SECONDS = 10;
+    private static final int RANGE = 5; // 5 blocks in each direction = 10x10x10 range
+
+    public Tier2GCrystalListener(JavaPlugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.debug = plugin.getConfig().getBoolean("debug", false);
         // Read crystal head ID and name color from config
-        this.crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_1.head_id", "74344");
+        this.crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_2.head_id", "74338");
         String colorHex = plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC");
         this.nameColor = Integer.parseInt(colorHex, 16);
     }
 
     // Static initializer to create the NamespacedKey
     static {
-        CRYSTAL_KEY = new NamespacedKey("swishhyysadditions", "growing_crystal");
-    }
-
-    /**
-     * Creates a Growing Crystal item using HeadDatabase
-     * @return ItemStack of the Growing Crystal with the correct skin
-     */
-    public ItemStack createGrowingCrystal() {
-        try {
-            HeadDatabaseAPI hdb = new HeadDatabaseAPI();
-            // Using the exact same method for getting the head as in the placement code
-            ItemStack crystal = hdb.getItemHead(crystalHeadId);
-            ItemMeta meta = crystal.getItemMeta();
-            meta.displayName(Component.text("Growing Crystal", TextColor.color(nameColor)));
-
-            // Add persistent data tag to identify this as a Growing Crystal
-            meta.getPersistentDataContainer().set(CRYSTAL_KEY, PersistentDataType.BYTE, (byte)1);
-
-            crystal.setItemMeta(meta);
-            return crystal;
-        } catch (Exception ex) {
-            // Fallback to a regular player head
-            ItemStack fallback = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
-            ItemMeta meta = fallback.getItemMeta();
-            meta.displayName(Component.text("Growing Crystal", TextColor.color(nameColor)));
-
-            // Add persistent data tag to identify this as a Growing Crystal
-            meta.getPersistentDataContainer().set(CRYSTAL_KEY, PersistentDataType.BYTE, (byte)1);
-
-            fallback.setItemMeta(meta);
-            return fallback;
-        }
+        CRYSTAL_KEY = new NamespacedKey("swishhyysadditions", "growing_crystal_tier2");
     }
 
     @EventHandler
@@ -96,9 +68,9 @@ public class Tier1GCrystalListener implements Listener {
             // First check if this item has our persistent data tag
             boolean isTaggedCrystal = meta.getPersistentDataContainer().has(CRYSTAL_KEY, PersistentDataType.BYTE);
 
-            // If it has our tag, we know it's a Growing Crystal
+            // If it has our tag, we know it's a Tier 2 Growing Crystal
             if (isTaggedCrystal) {
-                if (debug) logger.info("onCrystalUse: matched Growing Crystal by tag");
+                if (debug) logger.info("onCrystalUse: matched Tier 2 Growing Crystal by tag");
                 placeCrystal(e, item);
                 return;
             }
@@ -111,8 +83,8 @@ public class Tier1GCrystalListener implements Listener {
                 String rawName = LegacyComponentSerializer.legacySection().serialize(displayNameComp);
                 String name = PlainTextComponentSerializer.plainText().serialize(displayNameComp);
                 if (debug) logger.info("onCrystalUse: rawDisplayName=" + rawName + ", strippedName=" + name);
-                if ("Growing Crystal".equalsIgnoreCase(name)) {
-                    if (debug) logger.info("onCrystalUse: matched Growing Crystal by name");
+                if ("Tier 2 Growing Crystal".equalsIgnoreCase(name)) {
+                    if (debug) logger.info("onCrystalUse: matched Tier 2 Growing Crystal by name");
                     placeCrystal(e, item);
                 }
             }
@@ -120,9 +92,9 @@ public class Tier1GCrystalListener implements Listener {
     }
 
     /**
-     * Places a Growing Crystal in the world
+     * Places a Tier 2 Growing Crystal in the world
      * @param e The PlayerInteractEvent that triggered this
-     * @param item The Growing Crystal item being used
+     * @param item The Tier 2 Growing Crystal item being used
      */
     private void placeCrystal(PlayerInteractEvent e, ItemStack item) {
         e.setCancelled(true);
@@ -162,16 +134,16 @@ public class Tier1GCrystalListener implements Listener {
             as2.setInvisible(true);
             as2.setMarker(true);
             as2.setGravity(false);
-            as2.customName(Component.text("5:00", TextColor.color(nameColor)));
+            as2.customName(Component.text("10:00", TextColor.color(nameColor)));
             as2.setCustomNameVisible(true);
         });
 
-        // total lifetime in ticks (5 minutes = 300 seconds)
-        long lifeTicks = 300L * 20L;
+        // total lifetime in ticks
+        long lifeTicks = DURATION_SECONDS * 20L;
 
         // update countdown every second
         new BukkitRunnable() {
-            int remaining = 300;
+            int remaining = DURATION_SECONDS;
             @Override
             public void run() {
                 if (holo.isDead() || stand.isDead()) { this.cancel(); return; }
@@ -210,7 +182,8 @@ public class Tier1GCrystalListener implements Listener {
             }
         }.runTaskTimer(plugin, 0L, 1L);
 
-        // schedule growth every 10 seconds until removal
+        // schedule growth every INTERVAL_SECONDS until removal
+        long intervalTicks = INTERVAL_SECONDS * 20L;
         BukkitRunnable task = new BukkitRunnable() {
             int ticks = 0;
             @Override
@@ -221,14 +194,14 @@ public class Tier1GCrystalListener implements Listener {
                 }
                 // growth cycle with effects
                 growWithEffects(stand.getLocation(), world);
-                ticks += 10;
+                ticks += INTERVAL_SECONDS;
             }
         };
 
-        if (debug) logger.info("Growth task scheduled with interval=200 ticks");
-        task.runTaskTimer(this.plugin, 200L, 200L);
+        if (debug) logger.info("Growth task scheduled with interval=" + intervalTicks + " ticks");
+        task.runTaskTimer(this.plugin, intervalTicks, intervalTicks);
 
-        // schedule warning effect 15 ticks before crystal expires (300 seconds total = 6000 ticks)
+        // schedule warning effect 15 ticks before crystal expires
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -241,7 +214,7 @@ public class Tier1GCrystalListener implements Listener {
             }
         }.runTaskLater(this.plugin, lifeTicks - 15L);
 
-        // schedule final removal with explosion at 300 seconds
+        // schedule final removal with explosion
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -273,9 +246,9 @@ public class Tier1GCrystalListener implements Listener {
     }
 
     private void spawnBurstEffect(Location location, World world) {
-        // Create a subtle burst effect for Tier 1 using white particles
-        world.spawnParticle(Particle.CLOUD, location, 30, RANGE, RANGE, RANGE, 0.1);
-        world.spawnParticle(Particle.ASH, location, 20, RANGE, RANGE, RANGE, 0.05);
+        // Create a moderate burst effect for Tier 2 using white particles
+        world.spawnParticle(Particle.CLOUD, location, 50, RANGE, RANGE, RANGE, 0.1);
+        world.spawnParticle(Particle.ASH, location, 30, RANGE, RANGE, RANGE, 0.05);
     }
 
     private void growWithEffects(Location center, World world) {

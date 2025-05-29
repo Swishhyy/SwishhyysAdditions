@@ -13,17 +13,17 @@ import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import me.swishhyy.swishhyysAdditions.SwishhyysAdditions;
 import java.util.List;
 
-public class Tier1GCrystal {
+public class Tier3GCrystal {
     // Access the plugin instance to get the config
     private static final JavaPlugin plugin = SwishhyysAdditions.getPlugin(SwishhyysAdditions.class);
-    private static final NamespacedKey CRYSTAL_KEY = new NamespacedKey("swishhyysadditions", "growing_crystal");
+    private static final NamespacedKey CRYSTAL_KEY = new NamespacedKey("swishhyysadditions", "growing_crystal_tier3");
 
     public static ItemStack create() {
         ItemStack crystal;
 
         // Read crystal head ID from config with proper tier structure
-        String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_1.head_id", "74344");
-        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_1.name_color",
+        String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_3.head_id", "74317");
+        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_3.name_color",
                           plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC"));
         int nameColor = Integer.parseInt(colorHex, 16);
 
@@ -32,14 +32,18 @@ public class Tier1GCrystal {
             HeadDatabaseAPI hdb = new HeadDatabaseAPI();
             crystal = hdb.getItemHead(crystalHeadId);
 
-            // Apply custom name and lore
+            // Apply custom name and lore with significantly increased duration and improved interval
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Growing Crystal").color(TextColor.color(nameColor)));
+                meta.displayName(Component.text("Tier 3 Growing Crystal").color(TextColor.color(nameColor)));
                 meta.lore(List.of(
-                    Component.text("Duration: 120 seconds").color(NamedTextColor.GRAY),
-                    Component.text("Interval: 10 seconds").color(NamedTextColor.GRAY)
+                    Component.text("Duration: 480 seconds").color(NamedTextColor.GRAY),
+                    Component.text("Interval: 5 seconds").color(NamedTextColor.GRAY)
                 ));
+
+                // Add the tier-specific tag so the listener can identify it
+                meta.getPersistentDataContainer().set(CRYSTAL_KEY, PersistentDataType.BYTE, (byte)1);
+
                 crystal.setItemMeta(meta);
             }
         } catch (Exception e) {
@@ -47,11 +51,15 @@ public class Tier1GCrystal {
             crystal = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Growing Crystal").color(TextColor.color(nameColor)));
+                meta.displayName(Component.text("Tier 3 Growing Crystal").color(TextColor.color(nameColor)));
                 meta.lore(List.of(
-                    Component.text("Duration: 120 seconds").color(NamedTextColor.GRAY),
-                    Component.text("Interval: 10 seconds").color(NamedTextColor.GRAY)
+                    Component.text("Duration: 480 seconds").color(NamedTextColor.GRAY),
+                    Component.text("Interval: 5 seconds").color(NamedTextColor.GRAY)
                 ));
+
+                // Add the tier-specific tag so the listener can identify it
+                meta.getPersistentDataContainer().set(CRYSTAL_KEY, PersistentDataType.BYTE, (byte)1);
+
                 crystal.setItemMeta(meta);
             }
         }
@@ -59,4 +67,3 @@ public class Tier1GCrystal {
         return crystal;
     }
 }
-

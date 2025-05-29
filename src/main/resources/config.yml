@@ -6,7 +6,17 @@ debug: false
 # Custom items configuration
 items:
   growing_crystal:
-    # Head Database ID for the Growing Crystal
-    head_id: "74344"
-    # Display name color in hex
+    # Display name color in hex (default for all tiers if not specified)
     name_color: "9966CC"
+    # Tier 1 crystal configuration
+    tier_1:
+      head_id: "74344"
+      name_color: "9966CC"
+    # Tier 2 crystal configuration
+    tier_2:
+      head_id: "74338"
+      name_color: "9966CC"
+    # Tier 3 crystal configuration
+    tier_3:
+      head_id: "74317"
+      name_color: "9966CC"
