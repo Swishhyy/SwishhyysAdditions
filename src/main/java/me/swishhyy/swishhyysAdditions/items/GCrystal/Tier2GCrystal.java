@@ -21,9 +21,10 @@ public class Tier2GCrystal {
     public static ItemStack create() {
         ItemStack crystal;
 
-        // Read crystal head ID from config (same as in CrystalListener)
-        String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.head_id", "74344");
-        String colorHex = plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC");
+        // Read crystal head ID from config with proper tier structure
+        String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_2.head_id", "74338");
+        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_2.name_color",
+                          plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC"));
         int nameColor = Integer.parseInt(colorHex, 16);
 
         try {

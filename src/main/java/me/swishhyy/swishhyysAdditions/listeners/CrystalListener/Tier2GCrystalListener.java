@@ -43,7 +43,7 @@ public class Tier2GCrystalListener implements Listener {
         this.logger = plugin.getLogger();
         this.debug = plugin.getConfig().getBoolean("debug", false);
         // Read crystal head ID and name color from config
-        this.crystalHeadId = plugin.getConfig().getString("items.growing_crystal.head_id", "74344");
+        this.crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_2.head_id", "74338");
         String colorHex = plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC");
         this.nameColor = Integer.parseInt(colorHex, 16);
     }

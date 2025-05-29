@@ -4,8 +4,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import me.swishhyy.swishhyysAdditions.SwishhyysAdditions;
@@ -14,13 +16,15 @@ import java.util.List;
 public class Tier1GCrystal {
     // Access the plugin instance to get the config
     private static final JavaPlugin plugin = SwishhyysAdditions.getPlugin(SwishhyysAdditions.class);
+    private static final NamespacedKey CRYSTAL_KEY = new NamespacedKey("swishhyysadditions", "growing_crystal");
 
     public static ItemStack create() {
         ItemStack crystal;
 
-        // Read crystal head ID from config (same as in CrystalListener)
-        String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.head_id", "74344");
-        String colorHex = plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC");
+        // Read crystal head ID from config with proper tier structure
+        String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_1.head_id", "74344");
+        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_1.name_color",
+                          plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC"));
         int nameColor = Integer.parseInt(colorHex, 16);
 
         try {
