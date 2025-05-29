@@ -126,6 +126,9 @@ public class Tier2GCrystalListener implements Listener {
 
         if (debug) logger.info("onCrystalUse: spawned ArmorStand at " + spawnLoc);
 
+        // spawn idle particles around the crystal
+        spawnIdleParticles(spawnLoc, world);
+
         // spawn hologram above the crystal for countdown
         ArmorStand holo = world.spawn(spawnLoc.clone().add(0, 2.5, 0), ArmorStand.class, as2 -> {
             as2.setInvisible(true);
@@ -189,29 +192,8 @@ public class Tier2GCrystalListener implements Listener {
                     this.cancel();
                     return;
                 }
-                // growth cycle
-                Location center = stand.getLocation();
-                for (int dx = -RANGE; dx <= RANGE; dx++) {
-                    for (int dz = -RANGE; dz <= RANGE; dz++) {
-                        for (int dy = -RANGE; dy <= RANGE; dy++) {
-                            Location loc = center.clone().add(dx, dy, dz);
-                            Block block = world.getBlockAt(loc);
-                            // handle ageable growth replaced by direct data logic
-                            BlockData data = block.getBlockData();
-                            if (data instanceof Ageable ageable) {
-                                int max = ageable.getMaximumAge();
-                                if (ageable.getAge() < max) {
-                                    ageable.setAge(ageable.getAge() + 1);
-                                    block.setBlockData(ageable);
-                                    // visual particle effect (happy villager as bone-meal feedback)
-                                    world.spawnParticle(Particle.HAPPY_VILLAGER, block.getLocation().add(0.5, 1.0, 0.5), 1);
-                                }
-                            }
-                        }
-                    }
-                }
-                // play growth sound every cycle
-                world.playSound(center, Sound.BLOCK_CHORUS_FLOWER_GROW, 1.0F, 1.0F);
+                // growth cycle with effects
+                growWithEffects(stand.getLocation(), world);
                 ticks += INTERVAL_SECONDS;
             }
         };
@@ -246,5 +228,58 @@ public class Tier2GCrystalListener implements Listener {
                 if (debug) logger.info("Crystal expired at " + expireLoc);
             }
         }.runTaskLater(this.plugin, lifeTicks);
+    }
+
+    private void spawnIdleParticles(Location location, World world) {
+        // Adjust idle particles to have a slightly larger size around the head of the armor stand
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (world.getNearbyEntities(location, 1, 1, 1).stream().noneMatch(e -> e instanceof ArmorStand)) {
+                    this.cancel();
+                    return;
+                }
+                world.spawnParticle(Particle.CRIT, location.clone().add(0, 1.8, 0), 5, 0.3, 0.3, 0.3, 0.01);
+                world.spawnParticle(Particle.CLOUD, location.clone().add(0, 1.8, 0), 3, 0.2, 0.2, 0.2, 0.01);
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    private void spawnBurstEffect(Location location, World world) {
+        // Create a moderate burst effect for Tier 2 using white particles
+        world.spawnParticle(Particle.CLOUD, location, 50, RANGE, RANGE, RANGE, 0.1);
+        world.spawnParticle(Particle.ASH, location, 30, RANGE, RANGE, RANGE, 0.05);
+    }
+
+    private void growWithEffects(Location center, World world) {
+        spawnBurstEffect(center, world);
+
+        // Schedule the growth and burst effect after the charging effect
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Growth logic
+                for (int dx = -RANGE; dx <= RANGE; dx++) {
+                    for (int dz = -RANGE; dz <= RANGE; dz++) {
+                        for (int dy = -RANGE; dy <= RANGE; dy++) {
+                            Location loc = center.clone().add(dx, dy, dz);
+                            Block block = world.getBlockAt(loc);
+                            BlockData data = block.getBlockData();
+                            if (data instanceof Ageable ageable) {
+                                int max = ageable.getMaximumAge();
+                                if (ageable.getAge() < max) {
+                                    ageable.setAge(ageable.getAge() + 1);
+                                    block.setBlockData(ageable);
+                                    world.spawnParticle(Particle.HAPPY_VILLAGER, block.getLocation().add(0.5, 1.0, 0.5), 1);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Trigger the burst effect
+                spawnBurstEffect(center, world);
+            }
+        }.runTaskLater(plugin, 20L); // Delay to match the charging effect duration
     }
 }
