@@ -12,11 +12,14 @@ items:
     tier_1:
       head_id: "74344"
       name_color: "9966CC"
+      display_name: "T1 Growth Crystal"
     # Tier 2 crystal configuration
     tier_2:
       head_id: "74338"
-      name_color: "9966CC"
+      name_color: "0F52BA"
+      display_name: "T2 Growth Crystal"
     # Tier 3 crystal configuration
     tier_3:
       head_id: "74317"
-      name_color: "9966CC"
+      name_color: "E0115F"
+      display_name: "T3 Growth Crystal"

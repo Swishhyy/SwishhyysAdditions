@@ -23,8 +23,7 @@ public class Tier3GCrystal {
 
         // Read crystal head ID from config with proper tier structure
         String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_3.head_id", "74317");
-        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_3.name_color",
-                          plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC"));
+        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_3.name_color", "E0115F");
         int nameColor = Integer.parseInt(colorHex, 16);
 
         try {
@@ -35,7 +34,8 @@ public class Tier3GCrystal {
             // Apply custom name and lore with significantly increased duration and improved interval
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Tier 3 Growing Crystal").color(TextColor.color(nameColor)));
+                String displayName = plugin.getConfig().getString("items.growing_crystal.tier_3.display_name", "T3 Growth Crystal");
+                meta.displayName(Component.text(displayName).color(TextColor.color(nameColor)));
                 meta.lore(List.of(
                     Component.text("Duration: 480 seconds").color(NamedTextColor.GRAY),
                     Component.text("Interval: 5 seconds").color(NamedTextColor.GRAY)
@@ -51,7 +51,8 @@ public class Tier3GCrystal {
             crystal = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Tier 3 Growing Crystal").color(TextColor.color(nameColor)));
+                String displayName = plugin.getConfig().getString("items.growing_crystal.tier_3.display_name", "T3 Growth Crystal");
+                meta.displayName(Component.text(displayName).color(TextColor.color(nameColor)));
                 meta.lore(List.of(
                     Component.text("Duration: 480 seconds").color(NamedTextColor.GRAY),
                     Component.text("Interval: 5 seconds").color(NamedTextColor.GRAY)

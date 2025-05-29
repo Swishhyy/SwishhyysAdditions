@@ -23,9 +23,6 @@ public class Tier2GCrystal {
 
         // Read crystal head ID from config with proper tier structure
         String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_2.head_id", "74338");
-        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_2.name_color",
-                          plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC"));
-        int nameColor = Integer.parseInt(colorHex, 16);
 
         try {
             // Get the custom head from HeadDatabase using the config-defined ID
@@ -35,7 +32,10 @@ public class Tier2GCrystal {
             // Apply custom name and lore with increased duration and interval
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Tier 2 Growing Crystal").color(TextColor.color(nameColor)));
+                String displayName = plugin.getConfig().getString("items.growing_crystal.tier_2.display_name", "T2 Growth Crystal");
+                String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_2.name_color", "0F52BA");
+                int nameColor = Integer.parseInt(colorHex, 16);
+                meta.displayName(Component.text(displayName).color(TextColor.color(nameColor)));
                 meta.lore(List.of(
                     Component.text("Duration: 240 seconds").color(NamedTextColor.GRAY),
                     Component.text("Interval: 8 seconds").color(NamedTextColor.GRAY)
@@ -51,7 +51,10 @@ public class Tier2GCrystal {
             crystal = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Tier 2 Growing Crystal").color(TextColor.color(nameColor)));
+                String displayName = plugin.getConfig().getString("items.growing_crystal.tier_2.display_name", "T2 Growth Crystal");
+                String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_2.name_color", "0F52BA");
+                int nameColor = Integer.parseInt(colorHex, 16);
+                meta.displayName(Component.text(displayName).color(TextColor.color(nameColor)));
                 meta.lore(List.of(
                     Component.text("Duration: 240 seconds").color(NamedTextColor.GRAY),
                     Component.text("Interval: 8 seconds").color(NamedTextColor.GRAY)

@@ -7,7 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import me.swishhyy.swishhyysAdditions.SwishhyysAdditions;
@@ -23,9 +22,6 @@ public class Tier1GCrystal {
 
         // Read crystal head ID from config with proper tier structure
         String crystalHeadId = plugin.getConfig().getString("items.growing_crystal.tier_1.head_id", "74344");
-        String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_1.name_color",
-                          plugin.getConfig().getString("items.growing_crystal.name_color", "9966CC"));
-        int nameColor = Integer.parseInt(colorHex, 16);
 
         try {
             // Get the custom head from HeadDatabase using the config-defined ID
@@ -35,7 +31,10 @@ public class Tier1GCrystal {
             // Apply custom name and lore
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Growing Crystal").color(TextColor.color(nameColor)));
+                String displayName = plugin.getConfig().getString("items.growing_crystal.tier_1.display_name", "T1 Growth Crystal");
+                String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_1.name_color", "9966CC");
+                int nameColor = Integer.parseInt(colorHex, 16);
+                meta.displayName(Component.text(displayName).color(TextColor.color(nameColor)));
                 meta.lore(List.of(
                     Component.text("Duration: 120 seconds").color(NamedTextColor.GRAY),
                     Component.text("Interval: 10 seconds").color(NamedTextColor.GRAY)
@@ -47,7 +46,10 @@ public class Tier1GCrystal {
             crystal = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) crystal.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Growing Crystal").color(TextColor.color(nameColor)));
+                String displayName = plugin.getConfig().getString("items.growing_crystal.tier_1.display_name", "T1 Growth Crystal");
+                String colorHex = plugin.getConfig().getString("items.growing_crystal.tier_1.name_color", "9966CC");
+                int nameColor = Integer.parseInt(colorHex, 16);
+                meta.displayName(Component.text(displayName).color(TextColor.color(nameColor)));
                 meta.lore(List.of(
                     Component.text("Duration: 120 seconds").color(NamedTextColor.GRAY),
                     Component.text("Interval: 10 seconds").color(NamedTextColor.GRAY)

@@ -8,11 +8,11 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import me.swishhyy.swishhyysAdditions.items.GCrystal.Tier3GCrystal;
 
-public class Tier3GCrystalRecipe {
+public class T3GCrystalRecipe {
     private final JavaPlugin plugin;
     private final NamespacedKey recipeKey;
 
-    public Tier3GCrystalRecipe(JavaPlugin plugin) {
+    public T3GCrystalRecipe(JavaPlugin plugin) {
         this.plugin = plugin;
         this.recipeKey = new NamespacedKey(plugin, "tier3_growing_crystal");
     }
